@@ -15,7 +15,10 @@ with open('./rgb_names.yaml') as f:
 names = html_dic.keys()
 specs = html_dic.values()
 rgbs = np.array([colors.colorConverter.to_rgb(spec) for spec in specs], dtype=np.float)
-hsvs = np.array([colors.rgb_to_hsv(rgb) for rgb in rgbs], dtype=np.float)
+shape_list = rgbs.shape  # A list of color 3-tuples
+shape_trivial_2d = rgbs.shape[0], 1, rgbs.shape[1]  # Make it fit a function meant for images
+hsvs = colors.rgb_to_hsv(rgbs.reshape(shape_trivial_2d))
+hsvs = hsvs.reshape(shape_list)
 
 df = pd.DataFrame(np.hstack([np.array(zip(names, specs), dtype=np.string_), rgbs, hsvs]))
 #                  dtype=[np.object, np.object, np.float, np.float, np.float, np.float, np.float, np.float])
