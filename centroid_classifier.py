@@ -28,14 +28,16 @@ df.index = df['name']
 # Colors to classify
 
 
-def match_color_label(color, colorspace='rgb', label='', threshold=0.15):
-    '''
-    color A length 3 array-like of RGB or HSV values ranging from 0.0 to 1.0.
-    colorspace RGB or HSV.
-    label A color name, e.g. 'teal'.
-    threshold Maximum Euclidean distance to label centroid in HSV space to be considered a match.
-    return True or False
-    '''
+def match_color_label(color, label, colorspace='rgb', threshold=0.15):
+    """
+    Whether this color matches this label.
+
+    :param color: A length 3 array-like of RGB or HSV values ranging from 0.0 to 1.0.
+    :param label: A color name, e.g. 'teal'
+    :param colorspace: 'rgb' or 'hsv'
+    :param threshold: Maximum Euclidean distance to label centroid in HSV space to be considered a match.
+    :returns: True or False
+    """
     if colorspace == 'rgb':
         label_centroid = df[['r', 'g', 'b']][label].as_float()
     elif colorspace == 'hsv':
@@ -48,9 +50,13 @@ def match_color_label(color, colorspace='rgb', label='', threshold=0.15):
 
 
 def classify_color(color, colorspace='rgb'):
-    '''
-    return (name, distance) Distance in [0.0, sqrt(3)].
-    '''
+    """
+    Finds name that best matches this color.
+
+    :param color: A length 3 array-like of RGB or HSV values ranging from 0.0 to 1.0.
+    :param colorspace: 'rgb' or 'hsv'
+    :returns: (name, distance) Distance in [0.0, sqrt(3)].
+    """
     if colorspace == 'rgb':
         color = colors.rgb_to_hsv(color)
     elif colorspace != 'hsv':
