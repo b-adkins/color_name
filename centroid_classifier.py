@@ -1,3 +1,5 @@
+# @todo Refactor into class, have an HSV and an RGB object
+
 import collections
 
 import matplotlib.colors as colors
@@ -8,73 +10,60 @@ import numpy.linalg
 import pandas as pd
 import yaml
 
-# Load XKCD color labels
-with open('./rgb_names.yaml') as f:
-    html_dic = yaml.load(f)  # maps names to hexidecimal RGB, e.g. "#xxxxxx"
+class ColorNamer():
+    def __init__(self, name_file):
+        self.path = name_file
+        
+        with open(self.path) as f: 
+            html_dic = yaml.load(f) # maps names to hexidecimal RGB, e.g. "#xxxxxx"
 
-names = html_dic.keys()
-specs = html_dic.values()
-rgbs = np.array([colors.colorConverter.to_rgb(spec) for spec in specs], dtype=np.float)
-shape_list = rgbs.shape  # A list of color 3-tuples
-shape_trivial_2d = rgbs.shape[0], 1, rgbs.shape[1]  # Make it fit a function meant for images
-hsvs = colors.rgb_to_hsv(rgbs.reshape(shape_trivial_2d))
-hsvs = hsvs.reshape(shape_list)
+        self.names = html_dic.keys()
+        specs = html_dic.values()
+        self.colors = np.array([colors.colorConverter.to_rgb(spec) for spec in specs], dtype=np.float)
+        self.name_map = {n: c for n, c in zip(self.names, self.colors)}
 
-df = pd.DataFrame(np.hstack([np.array(zip(names, specs), dtype=np.string_), rgbs, hsvs]))
-#                  dtype=[np.object, np.object, np.float, np.float, np.float, np.float, np.float, np.float])
-df.columns = ['name', 'html', 'r', 'g', 'b', 'h', 's', 'v']
-df.index = df['name']
-
-# Colors to classify
-
-
-def match_color_label(color, label, colorspace='rgb', threshold=0.15):
-    """
-    Whether this color matches this label.
-
-    :param color: A length 3 array-like of RGB or HSV values ranging from 0.0 to 1.0.
-    :param label: A color name, e.g. 'teal'
-    :param colorspace: 'rgb' or 'hsv'
-    :param threshold: Maximum Euclidean distance to label centroid in HSV space to be considered a match.
-    :returns: True or False
-    """
-    if colorspace == 'rgb':
-        label_centroid = df[['r', 'g', 'b']][label].as_float()
-    elif colorspace == 'hsv':
-        label_centroid = df[['h', 's', 'v']][label].as_float()
-    else:
-        raise ValueError('Unrecognized colorspace "". Must be "rgb" or "hsv".'.format(colorspace))
-       
-    distance = np.linalg.norm(np.array(color, dtype=np.float) - label_centroid)
-    return distance <= threshold
-
-
-def classify_color(color, colorspace='rgb'):
-    """
-    Finds name that best matches this color.
-
-    :param color: A length 3 array-like of RGB or HSV values ranging from 0.0 to 1.0.
-    :param colorspace: 'rgb' or 'hsv'
-    :returns: (name, distance) Distance in [0.0, sqrt(3)].
-    """
-    if colorspace == 'rgb':
-        color = colors.rgb_to_hsv(color)
-    elif colorspace != 'hsv':
-        raise ValueError('Unrecognized colorspace "". Must be "rgb" or "hsv".'.format(colorspace))
-
-    distances = np.array([np.linalg.norm(hsv - color) for hsv in hsvs])
+    def color_centroid(self, label):
+        """
+        Returns color most representative of a color name.
     
-    i_closest = np.argmin(distances)
-    
-    return names[i_closest], distances[i_closest]
+        :param label: Color name, e.g. 'fuchsia'.
+        :return: length 3 color value
+        """
+        return self.name_map[label]
 
+    def is_color(self, color, label, threshold=0.15):
+        """
+        Whether this color matches this label.
+    
+        :param color: A length 3 array-like of RGB values ranging from 0.0 to 1.0.
+        :param label: A color name, e.g. 'teal'
+        :param threshold: Maximum Euclidean distance to label centroid in HSV space to be considered a match.
+        :returns: True or False
+        """
+        label_centroid = self.color_centroid(label)
+        distance = np.linalg.norm(np.array(color, dtype=np.float) - label_centroid)
+        return distance <= threshold
+
+    def classify_color(self, color):
+        """
+        Finds name that best matches this color.
+        
+        :param color: A length 3 array-like of RGB values ranging from 0.0 to 1.0.
+        :returns: (name, distance) Distance between 0 and sqrt(3).
+        """      
+        distances = np.linalg.norm(np.array(color, dtype=np.float) - self.colors, axis=1)
+        i_closest = np.argmin(distances)       
+        return self.names[i_closest], distances[i_closest]
 
 if __name__ == '__main__':
     classify_me_rgbs = np.array([[26, 189, 107], [171, 39, 101], [84, 98, 131]], dtype=np.float)/255
-    for color in classify_me_rgbs:
-        print color, 'is', classify_color(color)[0]
+    color_namer = ColorNamer('./rgb_names.yaml')
 
-    
+    for color in classify_me_rgbs:
+        print color, 'is', color_namer.classify_color(color)[0]
+
+# Test centroid classifier
+
 # Plot the candidate colors in HSV
 # fig = pyplot.figure()
 # ax = fig.add_subplot(221, projection='3d')

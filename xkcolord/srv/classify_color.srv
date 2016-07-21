@@ -1,0 +1,7 @@
+# An RGB/HSV triple, each element between 0 to 1.
+geometry_msgs/Vector3 value
+---
+# A color name, e.g. 'mauve'
+string label
+# Euclidean distance to closest color
+float32 distance

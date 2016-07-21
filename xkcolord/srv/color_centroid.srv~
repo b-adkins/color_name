@@ -1,0 +1,5 @@
+# A name, e.g. 'fuchsia'
+String label
+---
+# An RGB/HSV triple, each element between 0 to 1.
+Vector3 value

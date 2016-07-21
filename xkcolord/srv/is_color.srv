@@ -1,0 +1,8 @@
+# An RGB/HSV triple, each element between 0 to 1.
+geometry_msgs/Vector3 value
+# A color name, e.g. 'fuchsia'
+string label
+# Maximum Euclidean distance from value to label centroid that is considered a match.
+float32 threshold
+---
+bool matches

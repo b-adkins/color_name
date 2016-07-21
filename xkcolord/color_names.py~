@@ -1,0 +1,21 @@
+import rospy as ros
+from std_msgs.msg import String
+from geometry_msgs.msg import Vector3
+
+# Kludge to include a file a few two directories up
+import sys
+lib_path = os.path.join(os.path.dirname(__file__), '../../')
+sys.path.append(lib_path)
+from centroid_classifier import ColorNamer
+
+def main():
+    ros.init_node('xkcolord', anonymous=True)
+
+    # @todo Refactor to param server
+    color_names_file = './rgb_names.yaml'
+    color_namer = ColorNamer(color_names_file)
+
+    
+
+if __name__ == '__main__':
+    main()

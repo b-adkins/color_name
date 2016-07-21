@@ -1,0 +1,5 @@
+# A color name, e.g. 'fuchsia'
+string label
+---
+# An RGB/HSV triple, each element between 0 to 1.
+geometry_msgs/Vector3 value
